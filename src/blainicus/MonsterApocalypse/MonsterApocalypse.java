@@ -2,7 +2,9 @@ package blainicus.MonsterApocalypse;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -117,7 +119,8 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
     // arrowbuffer AB;
     wallattacker waller;
     boolean dontrun, drop, aggressivewolf, aggressivepig, megapig;
-    boolean checkWGBuildPermission, wgspawn, wgattack, wgexplosions, changecombathp, changecombatdmg, changeexplosions, changeadvanced, changespawning, pigwalls;
+    boolean checkWGBuildPermission, wgspawn, wgattack, wgexplosions, changecombathp, changecombatdmg, changeexplosions, changeadvanced,
+    changespawning, pigwalls;
     NeutralAttacker neutraler;
     boolean pillars, bridges, checkaggro;
     String pillarblock;
@@ -158,7 +161,15 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
     /**
      * When zombies break blocks, it is as if they used this tool.
      */
-    ItemStack effectiveBlocKBreakTool = new ItemStack(Material.STONE_PICKAXE);
+    ItemStack EFFECTIVE_BLOCK_BREAK_TOOL = new ItemStack(Material.STONE_PICKAXE);
+
+    HashSet<Material> REPLACEABLE_MATERIALS = new HashSet<>(
+        Arrays.asList(Material.AIR,
+                      Material.LAVA, Material.STATIONARY_LAVA,
+                      Material.WATER, Material.STATIONARY_WATER,
+                      Material.LONG_GRASS, Material.DEAD_BUSH, Material.RED_ROSE, Material.YELLOW_FLOWER,
+                      Material.RED_MUSHROOM, Material.BROWN_MUSHROOM,
+                      Material.CROPS, Material.CARROT, Material.POTATO, Material.BEETROOT));
 
     private class EntitySpawn {
         EntityType type;
@@ -4428,14 +4439,6 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
         }
     }
 
-    public boolean placeblockflipper(Block b) {
-        if (checkWGBuildPermission) {
-            return placeblockwg(b);
-        } else {
-            return placeblock(b);
-        }
-    }
-
     public boolean popblockflipper(Block b) {
         if (!checkWGBuildPermission || mobCanBreak(b)) {
             Material material = b.getType();
@@ -4446,7 +4449,7 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
             boolean canDropItems = (material != Material.LAVA &&
                                     material != Material.WATER &&
                                     material != pillarmat);
-            Collection<ItemStack> drops = b.getDrops(effectiveBlocKBreakTool);
+            Collection<ItemStack> drops = b.getDrops(EFFECTIVE_BLOCK_BREAK_TOOL);
             b.getWorld().playEffect(b.getLocation(), Effect.STEP_SOUND, b.getTypeId());
             recordCH(b);
 
@@ -4505,33 +4508,28 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
         return false;
     }
 
-    public boolean placeblock(Block b) {
-        Material oldmat = b.getType();
-        if (!(oldmat == Material.AIR || oldmat == Material.LAVA || oldmat == Material.WATER || oldmat == Material.STATIONARY_LAVA
-              || oldmat == Material.STATIONARY_WATER || oldmat == Material.LONG_GRASS || oldmat == Material.RED_ROSE
-              || oldmat == Material.YELLOW_FLOWER)) {
-            return false;
-        }
-        b.getWorld().playEffect(b.getLocation(), Effect.STEP_SOUND, pillarmat.getId());
-        recordCH(b);
-        b.setType(pillarmat);
-        return true;
-    }
-
-    private boolean placeblockwg(Block b) {
-        if (mobCanBreak(b)) {
-            Material oldmat = b.getType();
-            if (!(oldmat == Material.AIR || oldmat == Material.LAVA || oldmat == Material.WATER || oldmat == Material.STATIONARY_LAVA
-                  || oldmat == Material.STATIONARY_WATER || oldmat == Material.LONG_GRASS || oldmat == Material.RED_ROSE
-                  || oldmat == Material.YELLOW_FLOWER)) {
+    public boolean placeblockflipper(Block b) {
+        if (!checkWGBuildPermission || mobCanBreak(b)) {
+            Material material = b.getType();
+            if (!REPLACEABLE_MATERIALS.contains(material)) {
                 return false;
             }
+
             b.getWorld().playEffect(b.getLocation(), Effect.STEP_SOUND, pillarmat.getId());
             recordCH(b);
-            b.setType(pillarmat);
+            boolean placeSponge = (material == Material.STATIONARY_WATER || material == Material.WATER);
+            Block blockBelow = b.getRelative(0, -1, 0);
+            if (blockBelow != null) {
+                Material materialBelow = blockBelow.getType();
+                if (materialBelow == Material.STATIONARY_WATER || materialBelow == Material.WATER) {
+                    placeSponge = true;
+                }
+            }
+            b.setType(placeSponge ? Material.SPONGE : pillarmat);
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public healthmanager getHealthManager() {
