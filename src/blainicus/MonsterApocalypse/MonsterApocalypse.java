@@ -4698,7 +4698,7 @@ public class MonsterApocalypse extends JavaPlugin implements Runnable {
                 if (Noneworld && !worldnames.get(i).equals(Noneworldname)) {
                     continue;
                 }
-                // if(plugin.getServer().getWorld(worldnames.get(i)).getEntities().size()>=nhardcap){continue;}
+                if (getServer().getWorld(worldnames.get(i)).getEntities().size()>=nhardcap) { continue; }
                 World world = getServer().getWorld(worldnames.get(i));
                 spawntime = System.currentTimeMillis();
                 rand = new Random(spawntime);
