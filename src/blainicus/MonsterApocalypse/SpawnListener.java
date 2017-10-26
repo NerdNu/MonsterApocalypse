@@ -370,6 +370,7 @@ public class SpawnListener implements Listener {
                             }
                         }
                     }
+                /*
                 } else if (originaltype == EntityType.WITHER) {
                     event.setCancelled(true);
                     if (spawnwither && originaly >= spawnyminwither && originaly <= spawnymaxwither) {
@@ -378,6 +379,7 @@ public class SpawnListener implements Listener {
                                 ent.getWorld().spawnEntity(ent.getLocation(), replacementwither);
                         }
                     }
+                */
                 } else if (originaltype == EntityType.SLIME) {
                     if (replacementslime != EntityType.MAGMA_CUBE && replacementslime != EntityType.SLIME) {
                         event.setCancelled(true);
